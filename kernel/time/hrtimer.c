@@ -918,7 +918,6 @@ static void __remove_hrtimer(struct hrtimer *timer,
 		goto out;
 	/* Pairs with the lockless read in hrtimer_is_queued() */
 	WRITE_ONCE(timer->state, newstate);
-	if (!(state & HRTIMER_STATE_ENQUEUED))
 		return;
 
 	if (!timerqueue_del(&base->active, &timer->node))

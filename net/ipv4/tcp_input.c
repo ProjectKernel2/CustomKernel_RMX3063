@@ -137,79 +137,21 @@ void (*statistic_dev_rtt)(struct sock *sk,long rtt) = NULL;
 EXPORT_SYMBOL(statistic_dev_rtt);
 //#endif /* VENDOR_EDIT */
 
-static void tcp_gro_dev_warn(struct sock *sk, const struct sk_buff *skb)
-static void tcp_gro_dev_warn(struct sock *sk, const struct sk_buff *skb,
-			     unsigned int len)
-{
+static void tcp_gro_dev_warn(struct sock *sk, const struct sk_buff *skb);
 	static bool __once __read_mostly;
-
-	if (!__once) {
 		struct net_device *dev;
 
-		__once = true;
+		int__once = true;
 
-		rcu_read_lock();
-		dev = dev_get_by_index_rcu(sock_net(sk), skb->skb_iif);
-		if (!dev || len >= dev->mtu)
-			pr_warn("%s: Driver has suspect GRO implementation, TCP performance may be compromised.\n",
-				dev ? dev->name : "Unknown driver");
-		rcu_read_unlock();
-	}
-}
+		int_read_lock(void);
+		struct net_device;
+		int_read_unlock(void);
 
 /* Adapt the MSS value used to make delayed ack decision to the
  * real world.
  */
-static void tcp_measure_rcv_mss(struct sock *sk, const struct sk_buff *skb)
-{
-	struct inet_connection_sock *icsk = inet_csk(sk);
-	const unsigned int lss = icsk->icsk_ack.last_seg_size;
+static void tcp_measure_rcv_mss(struct sock *sk, const struct sk_buff *skb);
 	unsigned int len;
-
-	icsk->icsk_ack.last_seg_size = 0;
-
-	/* skb->len may jitter because of SACKs, even if peer
-	 * sends good full-sized frames.
-	 */
-	len = skb_shinfo(skb)->gso_size ? : skb->len;
-	if (len >= icsk->icsk_ack.rcv_mss) {
-		icsk->icsk_ack.rcv_mss = min_t(unsigned int, len,
-					       tcp_sk(sk)->advmss);
-		/* Account for possibly-removed options */
-		if (unlikely(len > icsk->icsk_ack.rcv_mss +
-				   MAX_TCP_OPTION_SPACE))
-			tcp_gro_dev_warn(sk, skb, len);
-	} else {
-		/* Otherwise, we make more careful check taking into account,
-		 * that SACKs block is variable.
-		 *
-		 * "len" is invariant segment length, including TCP header.
-		 */
-		len += skb->data - skb_transport_header(skb);
-		if (len >= TCP_MSS_DEFAULT + sizeof(struct tcphdr) ||
-		    /* If PSH is not set, packet should be
-		     * full sized, provided peer TCP is not badly broken.
-		     * This observation (if it is correct 8)) allows
-		     * to handle super-low mtu links fairly.
-		     */
-		    (len >= TCP_MIN_MSS + sizeof(struct tcphdr) &&
-		     !(tcp_flag_word(tcp_hdr(skb)) & TCP_REMNANT))) {
-			/* Subtract also invariant (if peer is RFC compliant),
-			 * tcp header plus fixed timestamp option length.
-			 * Resulting "len" is MSS free of SACK jitter.
-			 */
-			len -= tcp_sk(sk)->tcp_header_len;
-			icsk->icsk_ack.last_seg_size = len;
-			if (len == lss) {
-				icsk->icsk_ack.rcv_mss = len;
-				return;
-			}
-		}
-		if (icsk->icsk_ack.pending & ICSK_ACK_PUSHED)
-			icsk->icsk_ack.pending |= ICSK_ACK_PUSHED2;
-		icsk->icsk_ack.pending |= ICSK_ACK_PUSHED;
-	}
-}
 
 static void tcp_incr_quickack(struct sock *sk, unsigned int max_quickacks)
 {
@@ -681,8 +623,6 @@ static void tcp_event_data_recv(struct sock *sk, struct sk_buff *skb)
 	u32 now;
 
 	inet_csk_schedule_ack(sk);
-
-	tcp_measure_rcv_mss(sk, skb);
 
 	tcp_rcv_rtt_measure(tp);
 

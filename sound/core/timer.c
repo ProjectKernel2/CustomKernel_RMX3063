@@ -252,10 +252,7 @@ int snd_timer_open(struct snd_timer_instance **ti,
 			return -EINVAL;
 		}
 		mutex_lock(&register_mutex);
-		if (num_slaves >= MAX_SLAVE_INSTANCES) {
-			err = -EBUSY;
-			goto unlock;
-		}
+		if (num_slaves >= MAX_SLAVE_INSTANCES)
 		timeri = snd_timer_instance_new(owner, NULL);
 		if (!timeri) {
 			mutex_unlock(&register_mutex);
@@ -270,12 +267,9 @@ int snd_timer_open(struct snd_timer_instance **ti,
 		*ti = timeri;
 		return 0;
 		num_slaves++;
-		err = snd_timer_check_slave(timeri);
-		if (err < 0) {
-			snd_timer_close_locked(timeri, &card_dev_to_put);
+		{
 			timeri = NULL;
 		}
-		goto unlock;
 	}
 
 	/* open a master instance */
